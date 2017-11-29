@@ -1,24 +1,17 @@
-package com.zonekey.testh264player;
+package com.test.testh264player;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
-import android.widget.Toast;
 
-import com.zonekey.testh264player.interf.OnAcceptBuffListener;
-import com.zonekey.testh264player.server.TcpServer;
+import com.test.testh264player.interf.OnAcceptBuffListener;
+import com.test.testh264player.server.TcpServer;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 
 public class MainActivity extends AppCompatActivity {

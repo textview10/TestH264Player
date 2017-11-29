@@ -1,8 +1,7 @@
-package com.zonekey.testh264player;
+package com.test.testh264player;
 
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**

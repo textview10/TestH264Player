@@ -1,14 +1,13 @@
-package com.zonekey.testh264player.server;
+package com.test.testh264player.server;
 
 import android.util.Log;
 
-import com.zonekey.testh264player.interf.OnAcceptBuffListener;
+import com.test.testh264player.interf.OnAcceptBuffListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.Socket;
 
 /**
  * Created by xu.wang

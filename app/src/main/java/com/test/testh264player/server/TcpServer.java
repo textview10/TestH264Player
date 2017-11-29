@@ -1,8 +1,8 @@
-package com.zonekey.testh264player.server;
+package com.test.testh264player.server;
 
 import android.util.Log;
 
-import com.zonekey.testh264player.interf.OnAcceptBuffListener;
+import com.test.testh264player.interf.OnAcceptBuffListener;
 
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
