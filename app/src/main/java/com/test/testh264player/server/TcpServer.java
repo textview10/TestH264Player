@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.test.testh264player.interf.OnAcceptBuffListener;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -20,9 +21,10 @@ public class TcpServer {
     private int tcpPort = 11111;
     private boolean isAccept = true;
     private OnAcceptBuffListener mListener;
+    private AcceptH264MsgThread acceptH264MsgThread;
 
     public void startServer() {
-        new Thread(){
+        new Thread() {
             @Override
             public void run() {
                 super.run();
@@ -33,7 +35,7 @@ public class TcpServer {
                     serverSocket.bind(socketAddress);
                     while (isAccept) {
                         Socket socket = serverSocket.accept();
-                        AcceptH264MsgThread acceptH264MsgThread = new AcceptH264MsgThread(socket.getInputStream(),socket.getOutputStream(), mListener);
+                        acceptH264MsgThread = new AcceptH264MsgThread(socket.getInputStream(), socket.getOutputStream(), mListener);
                         acceptH264MsgThread.start();
                     }
                 } catch (Exception e) {
@@ -46,5 +48,22 @@ public class TcpServer {
 
     public void setOnAccepttBuffListener(OnAcceptBuffListener listener) {
         this.mListener = listener;
+    }
+
+    public void stopServer() {
+        this.mListener = null;
+        isAccept = false;
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                try {
+                    if (acceptH264MsgThread != null) acceptH264MsgThread.shutdown();
+                    if (serverSocket != null) serverSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
     }
 }

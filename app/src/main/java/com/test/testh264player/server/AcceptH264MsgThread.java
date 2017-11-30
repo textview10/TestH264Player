@@ -50,6 +50,10 @@ public class AcceptH264MsgThread extends Thread {
         }
     }
 
+    public void shutdown(){
+        startFlag = false;
+        this.interrupt();
+    }
 
     /**
      * 保证从流里读到指定长度数据

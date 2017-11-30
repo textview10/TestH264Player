@@ -39,13 +39,13 @@ public class DecodeThread extends Thread {
             try {
                 decodeLoop(tempBuff);
             } catch (Exception e) {
-                Log.e("DecodeThread","Exception" + e.toString());
+                Log.e("DecodeThread", "Exception" + e.toString());
             }
         }
     }
 
     private void decodeLoop(byte[] buff) {
-         boolean mStopFlag = false;
+        boolean mStopFlag = false;
         //存放目标文件的数据
         ByteBuffer[] inputBuffers = mCodec.getInputBuffers();
         //解码后的数据，包含每一个buffer的元数据信息，例如偏差，在相关解码器中有效的数据大小
@@ -163,5 +163,10 @@ public class DecodeThread extends Thread {
             lsp[i] = j;
         }
         return lsp;
+    }
+
+    public void shutdown() {
+        isPlaying = false;
+        this.interrupt();
     }
 }

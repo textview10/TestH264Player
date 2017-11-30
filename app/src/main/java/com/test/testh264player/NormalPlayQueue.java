@@ -12,29 +12,35 @@ import java.util.concurrent.ArrayBlockingQueue;
  */
 
 public class NormalPlayQueue {
-    private ArrayBlockingQueue<byte[]> mPlayQUeue;
+    private ArrayBlockingQueue<byte[]> mPlayQueue;
     private String TAG = "NormalPlayQueue";
     private static final int NORMAL_FRAME_BUFFER_SIZE = 150; //缓存区大小
 
     public NormalPlayQueue() {
-        mPlayQUeue = new ArrayBlockingQueue<byte[]>(NORMAL_FRAME_BUFFER_SIZE, true);
+        mPlayQueue = new ArrayBlockingQueue<byte[]>(NORMAL_FRAME_BUFFER_SIZE, true);
     }
 
 
     public byte[] takeByte() {
         try {
-            return mPlayQUeue.take();
+            return mPlayQueue.take();
         } catch (InterruptedException e) {
-            Log.e(TAG,"take bytes exception" + e.toString());
+            Log.e(TAG, "take bytes exception" + e.toString());
             return null;
         }
     }
 
     public void putByte(byte[] bytes) {
         try {
-            mPlayQUeue.put(bytes);
+            mPlayQueue.put(bytes);
         } catch (InterruptedException e) {
             Log.e(TAG, "put bytes exception" + e.toString());
+        }
+    }
+
+    public void stop() {
+        if (mPlayQueue != null) {
+            mPlayQueue.clear();
         }
     }
 }

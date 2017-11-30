@@ -17,7 +17,7 @@ import java.nio.ByteBuffer;
 public class MainActivity extends AppCompatActivity {
     private SurfaceView mSurface = null;
     private SurfaceHolder mSurfaceHolder;
-    private Thread mDecodeThread;
+    private DecodeThread mDecodeThread;
     private MediaCodec mCodec;
 
     private static final int VIDEO_WIDTH = 1920;
@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private int FrameRate = 30;
     private Boolean UseSPSandPPS = false;
     private NormalPlayQueue mPlayqueue;
+    private TcpServer tcpServer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startServer() {
         mPlayqueue = new NormalPlayQueue();
-        TcpServer tcpServer = new TcpServer();
+        tcpServer = new TcpServer();
         tcpServer.setOnAccepttBuffListener(new MyAcceptH264Listener());
         tcpServer.startServer();
     }
@@ -98,5 +99,15 @@ public class MainActivity extends AppCompatActivity {
         public void acceptBuff(byte[] buff) {
             mPlayqueue.putByte(buff);
         }
+    }
+
+
+    @Override
+    public void finish() {
+        super.finish();
+       if (mPlayqueue != null) mPlayqueue.stop();
+       if (mCodec != null) mCodec.release();
+       if (mDecodeThread != null) mDecodeThread.shutdown();
+       if (tcpServer != null) tcpServer.stopServer();
     }
 }
