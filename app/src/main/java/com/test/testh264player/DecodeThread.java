@@ -100,7 +100,7 @@ public class DecodeThread extends Thread {
 //                        }
 //                    }
                     SystemClock.sleep(1);
-                    Log.e(TAG, "decode a frame time =" + (System.currentTimeMillis() - startMs));
+//                    Log.e(TAG, "decode a frame time =" + (System.currentTimeMillis() - startMs));
                     boolean doRender = (info.size != 0);
                     //对outputbuffer的处理完后，调用这个函数把buffer重新返回给codec类。
                     mCodec.releaseOutputBuffer(outIndex, doRender);
