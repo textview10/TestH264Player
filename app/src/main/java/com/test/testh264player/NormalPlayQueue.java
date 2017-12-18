@@ -23,6 +23,9 @@ public class NormalPlayQueue {
 
     public byte[] takeByte() {
         try {
+            if (mPlayQueue.size() >= 50) {
+                Log.e(TAG, "too much frame in NormalPlayQueue" + mPlayQueue.size());
+            }
             return mPlayQueue.take();
         } catch (InterruptedException e) {
             Log.e(TAG, "take bytes exception" + e.toString());
@@ -43,4 +46,5 @@ public class NormalPlayQueue {
             mPlayQueue.clear();
         }
     }
+
 }

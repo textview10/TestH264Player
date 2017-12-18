@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 public class DecodeThread extends Thread {
     private MediaCodec mCodec;
     private NormalPlayQueue playQueue;
+    private String TAG = "DecodeThread";
 
     private boolean isPlaying = true;
 
@@ -51,7 +52,7 @@ public class DecodeThread extends Thread {
         //解码后的数据，包含每一个buffer的元数据信息，例如偏差，在相关解码器中有效的数据大小
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
         long startMs = System.currentTimeMillis();
-        long timeoutUs = 10000;
+        long timeoutUs = 10000; //微秒
         byte[] marker0 = new byte[]{0, 0, 0, 1};
         byte[] dummyFrame = new byte[]{0x00, 0x00, 0x01, 0x20};
         byte[] streamBuffer = null;
@@ -90,16 +91,20 @@ public class DecodeThread extends Thread {
                 int outIndex = mCodec.dequeueOutputBuffer(info, timeoutUs);
                 if (outIndex >= 0) {
                     //帧控制是不在这种情况下工作，因为没有PTS H264是可用的
-                    while (info.presentationTimeUs / 1000 > System.currentTimeMillis() - startMs) {
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
+//                    while (info.presentationTimeUs / 1000 > System.currentTimeMillis() - startMs) {
+//                        try {
+//                            Thread.sleep(100);
+//                            Log.e(TAG, "sleep 100");
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+                    SystemClock.sleep(1);
+                    Log.e(TAG, "decode a frame time =" + (System.currentTimeMillis() - startMs));
                     boolean doRender = (info.size != 0);
                     //对outputbuffer的处理完后，调用这个函数把buffer重新返回给codec类。
                     mCodec.releaseOutputBuffer(outIndex, doRender);
+
                 } else {
                 }
             }
@@ -127,7 +132,7 @@ public class DecodeThread extends Thread {
 
     private int KMPMatch(byte[] pattern, byte[] bytes, int start, int remain) {
         try {
-            Thread.sleep(30);
+            Thread.sleep(1);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
