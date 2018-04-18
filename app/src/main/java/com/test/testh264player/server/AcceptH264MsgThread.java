@@ -1,5 +1,6 @@
 package com.test.testh264player.server;
 
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.test.testh264player.interf.OnAcceptBuffListener;
@@ -42,6 +43,7 @@ public class AcceptH264MsgThread extends Thread {
             while (startFlag) {
                 byte[] length = readByte(InputStream, 4);
                 if (length.length == 0) {
+                    SystemClock.sleep(1);
                     continue;
                 }
                 int buffLength = bytesToInt(length);
@@ -49,10 +51,10 @@ public class AcceptH264MsgThread extends Thread {
                 listener.acceptBuff(buff);
             }
         } catch (Exception e) {
-            Log.e(TAG, "read and write buff exception = " + e.toString());
+            Log.i(TAG, "read and write buff exception = " + e.toString());
             if (mStateChangeListener != null) mStateChangeListener.acceptTcpDisconnect(e);
         } finally {
-            Log.e(TAG,"the thread complete ...");
+            startFlag = false;
         }
     }
 
@@ -80,7 +82,8 @@ public class AcceptH264MsgThread extends Thread {
                 len += eachLen;
                 baos.write(buff, 0, eachLen);
             } else {
-                break;
+                baos.close();
+                throw new IOException(TAG + "   :tcp have diaconnect...");
             }
             if (len < readSize) {
                 buff = new byte[readSize - len];

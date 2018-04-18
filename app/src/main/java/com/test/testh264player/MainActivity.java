@@ -106,16 +106,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //客户端Tcp状态连接的回调...
+    //客户端Tcp连接状态的回调...
     class MyAcceptTcpStateListener implements OnAcceptTcpStateChangeListener {
 
         @Override
-        public void acceptTcpConnect() {
+        public void acceptTcpConnect() {    //接收到客户端的连接...
             Log.e(TAG, "accept a tcp connect...");
         }
 
         @Override
-        public void acceptTcpDisconnect(Exception e) {
+        public void acceptTcpDisconnect(Exception e) {  //客户端的连接断开...
             Log.e(TAG, "acceptTcpConnect exception = " + e.toString());
         }
     }
