@@ -3,6 +3,7 @@ package com.test.testh264player.server;
 import android.util.Log;
 
 import com.test.testh264player.interf.OnAcceptBuffListener;
+import com.test.testh264player.interf.OnAcceptTcpStateChangeListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,11 +23,13 @@ public class AcceptH264MsgThread extends Thread {
     private OutputStream outputStream;
     private boolean startFlag = true;
     private OnAcceptBuffListener listener;
+    private OnAcceptTcpStateChangeListener mStateChangeListener;
 
-    public AcceptH264MsgThread(InputStream is, OutputStream outputStream, OnAcceptBuffListener listener) {
+    public AcceptH264MsgThread(InputStream is, OutputStream outputStream, OnAcceptBuffListener listener, OnAcceptTcpStateChangeListener disconnectListenerlistener) {
         this.InputStream = is;
         this.outputStream = outputStream;
         this.listener = listener;
+        this.mStateChangeListener = disconnectListenerlistener;
     }
 
     @Override
@@ -35,22 +38,25 @@ public class AcceptH264MsgThread extends Thread {
         byte[] ok = "OK".getBytes();
         try {
             outputStream.write(ok);
+            if (mStateChangeListener != null) mStateChangeListener.acceptTcpConnect();
             while (startFlag) {
                 byte[] length = readByte(InputStream, 4);
-                if (length.length == 0){
+                if (length.length == 0) {
                     continue;
                 }
                 int buffLength = bytesToInt(length);
                 byte[] buff = readByte(InputStream, buffLength);
                 listener.acceptBuff(buff);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(TAG, "" + e.toString());
+        } catch (Exception e) {
+            Log.e(TAG, "read and write buff exception = " + e.toString());
+            if (mStateChangeListener != null) mStateChangeListener.acceptTcpDisconnect(e);
+        } finally {
+            Log.e(TAG,"the thread complete ...");
         }
     }
 
-    public void shutdown(){
+    public void shutdown() {
         startFlag = false;
         this.interrupt();
     }

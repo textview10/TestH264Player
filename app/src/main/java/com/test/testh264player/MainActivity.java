@@ -4,17 +4,20 @@ import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
 import com.test.testh264player.interf.OnAcceptBuffListener;
+import com.test.testh264player.interf.OnAcceptTcpStateChangeListener;
 import com.test.testh264player.server.TcpServer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private SurfaceView mSurface = null;
     private SurfaceHolder mSurfaceHolder;
     private DecodeThread mDecodeThread;
@@ -84,15 +87,17 @@ public class MainActivity extends AppCompatActivity {
         mPlayqueue = new NormalPlayQueue();
         tcpServer = new TcpServer();
         tcpServer.setOnAccepttBuffListener(new MyAcceptH264Listener());
+        tcpServer.setOnTcpConnectListener(new MyAcceptTcpStateListener());
         tcpServer.startServer();
     }
 
     private void startDecodingThread() {
         mCodec.start();
-        mDecodeThread = new DecodeThread(mCodec,mPlayqueue);
+        mDecodeThread = new DecodeThread(mCodec, mPlayqueue);
         mDecodeThread.start();
     }
 
+    //接收到H264buff的回调
     class MyAcceptH264Listener implements OnAcceptBuffListener {
 
         @Override
@@ -101,13 +106,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //客户端Tcp状态连接的回调...
+    class MyAcceptTcpStateListener implements OnAcceptTcpStateChangeListener {
+
+        @Override
+        public void acceptTcpConnect() {
+            Log.e(TAG, "accept a tcp connect...");
+        }
+
+        @Override
+        public void acceptTcpDisconnect(Exception e) {
+            Log.e(TAG, "acceptTcpConnect exception = " + e.toString());
+        }
+    }
+
 
     @Override
     public void finish() {
         super.finish();
-       if (mPlayqueue != null) mPlayqueue.stop();
-       if (mCodec != null) mCodec.release();
-       if (mDecodeThread != null) mDecodeThread.shutdown();
-       if (tcpServer != null) tcpServer.stopServer();
+        if (mPlayqueue != null) mPlayqueue.stop();
+        if (mCodec != null) mCodec.release();
+        if (mDecodeThread != null) mDecodeThread.shutdown();
+        if (tcpServer != null) tcpServer.stopServer();
     }
 }
