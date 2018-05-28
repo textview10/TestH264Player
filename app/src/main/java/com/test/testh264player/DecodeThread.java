@@ -1,8 +1,12 @@
 package com.test.testh264player;
 
+import android.media.AudioTrack;
 import android.media.MediaCodec;
 import android.os.SystemClock;
 import android.util.Log;
+
+import com.test.testh264player.bean.Frame;
+import com.test.testh264player.decode.AudioMediaCodec;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,37 +22,69 @@ import java.nio.ByteBuffer;
  */
 
 public class DecodeThread extends Thread {
-    private MediaCodec mCodec;
+    private MediaCodec mVideoMediaCodec;
+    private AudioTrack mPlayer;
     private NormalPlayQueue playQueue;
     private String TAG = "DecodeThread";
 
     private boolean isPlaying = true;
 
     public DecodeThread(MediaCodec mediaCodec, NormalPlayQueue playQueue) {
-        this.mCodec = mediaCodec;
+        this.mVideoMediaCodec = mediaCodec;
+        this.mPlayer = AudioMediaCodec.getAudioTrack();
         this.playQueue = playQueue;
+        mPlayer.play();
     }
 
     @Override
     public void run() {
         while (isPlaying) {
-            byte[] tempBuff = playQueue.takeByte();
-            if (tempBuff == null) {
+            Frame frame = playQueue.takeByte();
+            if (frame == null) {
                 SystemClock.sleep(1);
                 continue;
             }
-            try {
-                decodeLoop(tempBuff);
-            } catch (Exception e) {
-                Log.e("DecodeThread", "Exception" + e.toString());
+
+            switch (frame.getType()) {
+                case Frame.KEY_FRAME:
+                case Frame.NORMAL_FRAME:
+                    try {
+                        decodeLoop(frame.getBytes());
+                    } catch (Exception e) {
+                        Log.e("DecodeThread", "frame Exception" + e.toString());
+                    }
+                    break;
+                case Frame.SPSPPS:
+                    try {
+                        ByteBuffer bb = ByteBuffer.allocate(frame.getPps().length + frame.getSps().length);
+                        bb.put(frame.getSps());
+                        bb.put(frame.getPps());
+                        decodeLoop(bb.array());
+                    } catch (Exception e) {
+                        Log.e("DecodeThread", "sps pps Exception" + e.toString());
+                    }
+                    break;
+                case Frame.AUDIO_FRAME:
+                    try {
+                        playAudio(frame.getBytes());
+                    } catch (Exception e) {
+                        Log.e("DecodeThread", "audio Exception" + e.toString());
+                    }
+                    break;
+
             }
         }
+    }
+
+    private void playAudio(byte[] buf) {
+        mPlayer.write(buf, 0, buf.length);
+        Log.e("DecodeThread", "buff length = " + buf.length);
     }
 
     private void decodeLoop(byte[] buff) {
         boolean mStopFlag = false;
         //存放目标文件的数据
-        ByteBuffer[] inputBuffers = mCodec.getInputBuffers();
+        ByteBuffer[] inputBuffers = mVideoMediaCodec.getInputBuffers();
         //解码后的数据，包含每一个buffer的元数据信息，例如偏差，在相关解码器中有效的数据大小
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
         long startMs = System.currentTimeMillis();
@@ -76,19 +112,21 @@ public class DecodeThread extends Thread {
                 } else {
                 }
 
-                int inIndex = mCodec.dequeueInputBuffer(timeoutUs);
+                int inIndex = mVideoMediaCodec.dequeueInputBuffer(timeoutUs);
                 if (inIndex >= 0) {
                     ByteBuffer byteBuffer = inputBuffers[inIndex];
                     byteBuffer.clear();
                     byteBuffer.put(streamBuffer, startIndex, nextFrameStart - startIndex);
                     //在给指定Index的inputbuffer[]填充数据后，调用这个函数把数据传给解码器
-                    mCodec.queueInputBuffer(inIndex, 0, nextFrameStart - startIndex, 0, 0);
+                    mVideoMediaCodec.queueInputBuffer(inIndex, 0, nextFrameStart - startIndex, 0, 0);
                     startIndex = nextFrameStart;
                 } else {
                     continue;
                 }
 
-                int outIndex = mCodec.dequeueOutputBuffer(info, timeoutUs);
+                int outIndex = mVideoMediaCodec.dequeueOutputBuffer(info, timeoutUs);
+
+
                 if (outIndex >= 0) {
                     //帧控制是不在这种情况下工作，因为没有PTS H264是可用的
 //                    while (info.presentationTimeUs / 1000 > System.currentTimeMillis() - startMs) {
@@ -103,7 +141,7 @@ public class DecodeThread extends Thread {
 //                    Log.e(TAG, "decode a frame time =" + (System.currentTimeMillis() - startMs));
                     boolean doRender = (info.size != 0);
                     //对outputbuffer的处理完后，调用这个函数把buffer重新返回给codec类。
-                    mCodec.releaseOutputBuffer(outIndex, doRender);
+                    mVideoMediaCodec.releaseOutputBuffer(outIndex, doRender);
 
                 } else {
                 }

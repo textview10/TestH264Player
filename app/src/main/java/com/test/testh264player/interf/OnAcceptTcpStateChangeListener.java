@@ -10,5 +10,5 @@ package com.test.testh264player.interf;
 public interface OnAcceptTcpStateChangeListener {
     void acceptTcpConnect();    //接收到客户端的Tcp连接
 
-    void acceptTcpDisconnect(Exception e); //接收到客户端的Tcp断开连接
+    void acceptTcpDisConnect(Exception e); //接收到客户端的Tcp断开连接
 }

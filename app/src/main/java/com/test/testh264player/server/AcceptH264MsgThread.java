@@ -3,6 +3,8 @@ package com.test.testh264player.server;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.test.testh264player.bean.Frame;
+import com.test.testh264player.decode.H264Decoder;
 import com.test.testh264player.interf.OnAcceptBuffListener;
 import com.test.testh264player.interf.OnAcceptTcpStateChangeListener;
 
@@ -25,12 +27,51 @@ public class AcceptH264MsgThread extends Thread {
     private boolean startFlag = true;
     private OnAcceptBuffListener listener;
     private OnAcceptTcpStateChangeListener mStateChangeListener;
+    private H264Decoder mDecoder;
 
     public AcceptH264MsgThread(InputStream is, OutputStream outputStream, OnAcceptBuffListener listener, OnAcceptTcpStateChangeListener disconnectListenerlistener) {
         this.InputStream = is;
         this.outputStream = outputStream;
         this.listener = listener;
         this.mStateChangeListener = disconnectListenerlistener;
+        mDecoder = new H264Decoder();
+        mDecoder.setOnVideoListener(new H264Decoder.OnVideoListener() {
+            @Override
+            public void onSpsPps(byte[] sps, byte[] pps) {
+                Frame spsPpsFrame = new Frame();
+                spsPpsFrame.setType(Frame.SPSPPS);
+                spsPpsFrame.setSps(sps);
+                spsPpsFrame.setPps(pps);
+                AcceptH264MsgThread.this.listener.acceptBuff(spsPpsFrame);
+            }
+
+            @Override
+            public void onVideo(byte[] video, int type) {
+                Frame frame = new Frame();
+                switch (type) {
+                    case Frame.KEY_FRAME:
+                        frame.setType(Frame.KEY_FRAME);
+                        frame.setBytes(video);
+                        AcceptH264MsgThread.this.listener.acceptBuff(frame);
+                        break;
+                    case Frame.NORMAL_FRAME:
+                        frame.setType(Frame.NORMAL_FRAME);
+                        frame.setBytes(video);
+                        AcceptH264MsgThread.this.listener.acceptBuff(frame);
+                        break;
+                    case Frame.AUDIO_FRAME:
+                        frame.setType(Frame.AUDIO_FRAME);
+                        frame.setBytes(video);
+                        AcceptH264MsgThread.this.listener.acceptBuff(frame);
+//                        Log.e("AcceptH264MsgThread", "audio frame ...");
+                        break;
+                    default:
+                        Log.e("AcceptH264MsgThread", "other video...");
+                        break;
+                }
+
+            }
+        });
     }
 
     @Override
@@ -48,11 +89,11 @@ public class AcceptH264MsgThread extends Thread {
                 }
                 int buffLength = bytesToInt(length);
                 byte[] buff = readByte(InputStream, buffLength);
-                listener.acceptBuff(buff);
+                mDecoder.decodeH264(buff);
             }
         } catch (Exception e) {
             Log.i(TAG, "read and write buff exception = " + e.toString());
-            if (mStateChangeListener != null) mStateChangeListener.acceptTcpDisconnect(e);
+            if (mStateChangeListener != null) mStateChangeListener.acceptTcpDisConnect(e);
         } finally {
             startFlag = false;
         }

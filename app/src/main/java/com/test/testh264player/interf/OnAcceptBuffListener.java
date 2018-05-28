@@ -1,5 +1,7 @@
 package com.test.testh264player.interf;
 
+import com.test.testh264player.bean.Frame;
+
 /**
  * Created by xu.wang
  * Date on  2017/11/29 14:56:39.
@@ -8,5 +10,5 @@ package com.test.testh264player.interf;
  */
 
 public interface OnAcceptBuffListener {
-    void acceptBuff(byte[] buff);
+    void acceptBuff(Frame frame);
 }

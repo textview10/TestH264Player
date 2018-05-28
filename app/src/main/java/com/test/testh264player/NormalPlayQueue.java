@@ -2,6 +2,8 @@ package com.test.testh264player;
 
 import android.util.Log;
 
+import com.test.testh264player.bean.Frame;
+
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -12,18 +14,18 @@ import java.util.concurrent.ArrayBlockingQueue;
  */
 
 public class NormalPlayQueue {
-    private ArrayBlockingQueue<byte[]> mPlayQueue;
+    private ArrayBlockingQueue<Frame> mPlayQueue;
     private String TAG = "NormalPlayQueue";
-    private static final int NORMAL_FRAME_BUFFER_SIZE = 150; //缓存区大小
+    private static final int NORMAL_FRAME_BUFFER_SIZE = 800; //缓存区大小
 
     public NormalPlayQueue() {
-        mPlayQueue = new ArrayBlockingQueue<byte[]>(NORMAL_FRAME_BUFFER_SIZE, true);
+        mPlayQueue = new ArrayBlockingQueue<Frame>(NORMAL_FRAME_BUFFER_SIZE, true);
     }
 
 
-    public byte[] takeByte() {
+    public Frame takeByte() {
         try {
-            if (mPlayQueue.size() >= 50) {
+            if (mPlayQueue.size() >= NORMAL_FRAME_BUFFER_SIZE) {
                 Log.e(TAG, "too much frame in NormalPlayQueue" + mPlayQueue.size());
             }
             return mPlayQueue.take();
@@ -33,9 +35,9 @@ public class NormalPlayQueue {
         }
     }
 
-    public void putByte(byte[] bytes) {
+    public void putByte(Frame frame) {
         try {
-            mPlayQueue.put(bytes);
+            mPlayQueue.put(frame);
         } catch (InterruptedException e) {
             Log.e(TAG, "put bytes exception" + e.toString());
         }
