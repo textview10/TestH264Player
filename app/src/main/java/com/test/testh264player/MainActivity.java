@@ -9,7 +9,8 @@ import android.view.SurfaceView;
 import android.view.WindowManager;
 
 import com.test.testh264player.bean.Frame;
-import com.test.testh264player.decode.VIdeoMediaCodec;
+import com.test.testh264player.decode.DecodeThread;
+import com.test.testh264player.mediacodec.VIdeoMediaCodec;
 import com.test.testh264player.interf.OnAcceptBuffListener;
 import com.test.testh264player.interf.OnAcceptTcpStateChangeListener;
 import com.test.testh264player.server.TcpServer;
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initialFIle() {
-        File file = new File(Environment.getExternalStorageDirectory(), "111.pcm");
+        File file = new File(Environment.getExternalStorageDirectory(), "test.aac");
         if (file.exists()) {
             file.delete();
         }

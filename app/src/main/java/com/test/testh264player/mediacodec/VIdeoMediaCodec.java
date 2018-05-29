@@ -1,4 +1,4 @@
-package com.test.testh264player.decode;
+package com.test.testh264player.mediacodec;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;

@@ -1,12 +1,7 @@
-package com.test.testh264player;
+package com.test.testh264player.play;
 
-import android.media.AudioTrack;
 import android.media.MediaCodec;
 import android.os.SystemClock;
-import android.util.Log;
-
-import com.test.testh264player.bean.Frame;
-import com.test.testh264player.decode.AudioMediaCodec;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -16,72 +11,19 @@ import java.nio.ByteBuffer;
 
 /**
  * Created by xu.wang
- * Date on  2017/11/29 14:04:57.
+ * Date on  2018/5/29 16:37:58.
  *
- * @Desc 解码线程
+ * @Desc 使用MdeieCodec解析H264, 并显示到Surface
  */
 
-public class DecodeThread extends Thread {
+public class VideoPlay {
     private MediaCodec mVideoMediaCodec;
-    private AudioTrack mPlayer;
-    private NormalPlayQueue playQueue;
-    private String TAG = "DecodeThread";
 
-    private boolean isPlaying = true;
-
-    public DecodeThread(MediaCodec mediaCodec, NormalPlayQueue playQueue) {
+    public VideoPlay(MediaCodec mediaCodec) {
         this.mVideoMediaCodec = mediaCodec;
-        this.mPlayer = AudioMediaCodec.getAudioTrack();
-        this.playQueue = playQueue;
-        mPlayer.play();
     }
 
-    @Override
-    public void run() {
-        while (isPlaying) {
-            Frame frame = playQueue.takeByte();
-            if (frame == null) {
-                SystemClock.sleep(1);
-                continue;
-            }
-
-            switch (frame.getType()) {
-                case Frame.KEY_FRAME:
-                case Frame.NORMAL_FRAME:
-                    try {
-                        decodeLoop(frame.getBytes());
-                    } catch (Exception e) {
-                        Log.e("DecodeThread", "frame Exception" + e.toString());
-                    }
-                    break;
-                case Frame.SPSPPS:
-                    try {
-                        ByteBuffer bb = ByteBuffer.allocate(frame.getPps().length + frame.getSps().length);
-                        bb.put(frame.getSps());
-                        bb.put(frame.getPps());
-                        decodeLoop(bb.array());
-                    } catch (Exception e) {
-                        Log.e("DecodeThread", "sps pps Exception" + e.toString());
-                    }
-                    break;
-                case Frame.AUDIO_FRAME:
-                    try {
-                        playAudio(frame.getBytes());
-                    } catch (Exception e) {
-                        Log.e("DecodeThread", "audio Exception" + e.toString());
-                    }
-                    break;
-
-            }
-        }
-    }
-
-    private void playAudio(byte[] buf) {
-        mPlayer.write(buf, 0, buf.length);
-        Log.e("DecodeThread", "buff length = " + buf.length);
-    }
-
-    private void decodeLoop(byte[] buff) {
+    public void decodeH264(byte[] buff) {
         boolean mStopFlag = false;
         //存放目标文件的数据
         ByteBuffer[] inputBuffers = mVideoMediaCodec.getInputBuffers();
@@ -208,8 +150,11 @@ public class DecodeThread extends Thread {
         return lsp;
     }
 
-    public void shutdown() {
-        isPlaying = false;
-        this.interrupt();
+    public void release() {
+        if (mVideoMediaCodec != null) {
+            mVideoMediaCodec.stop();
+            mVideoMediaCodec.release();
+            mVideoMediaCodec = null;
+        }
     }
 }

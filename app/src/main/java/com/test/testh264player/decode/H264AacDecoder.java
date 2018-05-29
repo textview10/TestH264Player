@@ -4,17 +4,16 @@ import android.util.Log;
 
 import com.test.testh264player.bean.Frame;
 
-import java.nio.ByteBuffer;
 
 /**
  * Created by xu.wang
  * Date on  2018/5/28 11:58:32.
  *
- * @Desc
+ * @Desc 解析H264和AAC的Decoder
  */
 
-public class H264Decoder {
-    private static final String TAG = "H264Decoder";
+public class H264AacDecoder {
+    private static final String TAG = "H264AacDecoder";
 
     // Coded slice of a non-IDR picture slice_layer_without_partitioning_rbsp( )
     public final static int NonIDR = 1;
@@ -86,7 +85,7 @@ public class H264Decoder {
         if (frame.length < 5) {
             return false;
         }
-        return frame[4] == 1 || frame[4] == 18;
+        return frame[4] == ((byte) 0xFF) && frame[5] == ((byte) 0xF9);
     }
 
     private boolean isSps(byte[] frame) {

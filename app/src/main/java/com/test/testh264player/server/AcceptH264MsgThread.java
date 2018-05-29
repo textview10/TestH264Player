@@ -4,7 +4,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.test.testh264player.bean.Frame;
-import com.test.testh264player.decode.H264Decoder;
+import com.test.testh264player.decode.H264AacDecoder;
 import com.test.testh264player.interf.OnAcceptBuffListener;
 import com.test.testh264player.interf.OnAcceptTcpStateChangeListener;
 
@@ -27,15 +27,15 @@ public class AcceptH264MsgThread extends Thread {
     private boolean startFlag = true;
     private OnAcceptBuffListener listener;
     private OnAcceptTcpStateChangeListener mStateChangeListener;
-    private H264Decoder mDecoder;
+    private H264AacDecoder mDecoder;
 
     public AcceptH264MsgThread(InputStream is, OutputStream outputStream, OnAcceptBuffListener listener, OnAcceptTcpStateChangeListener disconnectListenerlistener) {
         this.InputStream = is;
         this.outputStream = outputStream;
         this.listener = listener;
         this.mStateChangeListener = disconnectListenerlistener;
-        mDecoder = new H264Decoder();
-        mDecoder.setOnVideoListener(new H264Decoder.OnVideoListener() {
+        mDecoder = new H264AacDecoder();
+        mDecoder.setOnVideoListener(new H264AacDecoder.OnVideoListener() {
             @Override
             public void onSpsPps(byte[] sps, byte[] pps) {
                 Frame spsPpsFrame = new Frame();
