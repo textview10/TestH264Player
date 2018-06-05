@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
  */
 
 public class AudioMediaCodec {
+    private static final String TAG = "AudioMediaCodec";
     public static final int DEFAULT_FREQUENCY = 44100;
     public static final int DEFAULT_MAX_BPS = 64;
     public static final int DEFAULT_MIN_BPS = 32;
@@ -31,8 +32,15 @@ public class AudioMediaCodec {
 
 
     public static AudioTrack getAudioTrack() {
+        int minBuffSize = AudioTrack.getMinBufferSize(DEFAULT_FREQUENCY, DEFAULT_CHANNEL_COUNT, DEFAULT_AUDIO_ENCODING);
+        if (minBuffSize == AudioTrack.ERROR_BAD_VALUE) {
+            Log.e(TAG, "Invalid parameter !");
+        }
         AudioTrack mPlayer = new AudioTrack(AudioManager.STREAM_MUSIC, DEFAULT_FREQUENCY, AudioFormat.CHANNEL_IN_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT, 2048, AudioTrack.MODE_STREAM);//
+        if (mPlayer.getState() == AudioTrack.STATE_UNINITIALIZED) {
+            Log.e(TAG, "AudioTrack initialize fail !");
+        }
         return mPlayer;
     }
 
@@ -45,7 +53,7 @@ public class AudioMediaCodec {
             MediaFormat mediaFormat = new MediaFormat();
             //数据类型
             mediaFormat.setString(MediaFormat.KEY_MIME, DEFAULT_MIME);
-            mediaFormat.setInteger(MediaFormat.KEY_AAC_PROFILE,DEFAULT_AUDIO_ENCODING);
+            mediaFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, DEFAULT_AUDIO_ENCODING);
             //声道个数
             mediaFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, DEFAULT_CHANNEL_COUNT);
             //采样率
@@ -65,6 +73,7 @@ public class AudioMediaCodec {
             return mDecoder;
         } catch (IOException e) {
             e.printStackTrace();
+            Log.e(TAG, "AudioMediaCodec initial error...");
         }
 
         return null;
