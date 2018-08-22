@@ -8,27 +8,16 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
-import com.test.testh264player.bean.Frame;
-import com.test.testh264player.decode.DecodeThread;
-import com.test.testh264player.mediacodec.VIdeoMediaCodec;
-import com.test.testh264player.interf.OnAcceptBuffListener;
-import com.test.testh264player.interf.OnAcceptTcpStateChangeListener;
-import com.test.testh264player.server.TcpServer;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.test.video_play.ScreenRecordController;
+import com.test.video_play.control.VideoPlayController;
+import com.test.video_play.server.tcp.interf.OnServerStateChangeListener;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private SurfaceView mSurface = null;
     private SurfaceHolder mSurfaceHolder;
-    private DecodeThread mDecodeThread;
 
-    private NormalPlayQueue mPlayqueue;
-    private TcpServer tcpServer;
-    private VIdeoMediaCodec VIdeoMediaCodec;
-    private FileOutputStream fos;
+    private VideoPlayController mController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,13 +27,21 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
         mSurface = findViewById(R.id.surfaceview);
-        initialFIle();
-        startServer();
+
+        mController = new VideoPlayController();
+
+        ScreenRecordController.getInstance()
+                .init(getApplication())
+                .setPort(11111)     //设置端口号
+                .startServer()  //初始化,并开启server
+                .setVideoPlayController(mController)    //设置VideoController
+                .setOnAcceptTcpStateChangeListener(mStateChangeListener);   //设置回调
+
         mSurfaceHolder = mSurface.getHolder();
         mSurfaceHolder.addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
-                initialMediaCodec(holder);
+                mController.surfaceCreate(holder);
             }
 
             @Override
@@ -54,76 +51,38 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
-                if (VIdeoMediaCodec != null) VIdeoMediaCodec.release();
+                mController.surfaceDestrory();
             }
         });
-    }
 
-    private void initialMediaCodec(SurfaceHolder holder) {
-        VIdeoMediaCodec = new VIdeoMediaCodec(holder, null, null);
-        mDecodeThread = new DecodeThread(VIdeoMediaCodec.getCodec(), mPlayqueue);
-        VIdeoMediaCodec.start();
-        mDecodeThread.start();
-    }
-
-    private void startServer() {
-        mPlayqueue = new NormalPlayQueue();
-        tcpServer = new TcpServer();
-        tcpServer.setOnAccepttBuffListener(new MyAcceptH264Listener());
-        tcpServer.setOnTcpConnectListener(new MyAcceptTcpStateListener());
-        tcpServer.startServer();
-    }
-
-    //接收到H264buff的回调
-    class MyAcceptH264Listener implements OnAcceptBuffListener {
-
-        @Override
-        public void acceptBuff(Frame frame) {
-//            if (frame.getType() == Frame.AUDIO_FRAME) {
-//                try {
-//                    fos.write(frame.getBytes());
-//                } catch (IOException e) {
-//                    Log.e("MAInActivity", "Exception =" + e.toString());
-//                }
-//                return;
-//            }
-            mPlayqueue.putByte(frame);
-        }
     }
 
     //客户端Tcp连接状态的回调...
-    class MyAcceptTcpStateListener implements OnAcceptTcpStateChangeListener {
+    OnServerStateChangeListener mStateChangeListener = new OnServerStateChangeListener() {
 
         @Override
-        public void acceptTcpConnect() {    //接收到客户端的连接...
+        public void acceptH264TcpConnect() {
             Log.e(TAG, "accept a tcp connect...");
         }
 
         @Override
-        public void acceptTcpDisConnect(Exception e) {  //客户端的连接断开...
+        public void acceptH264TcpDisConnect(Exception e) {
             Log.e(TAG, "acceptTcpConnect exception = " + e.toString());
         }
-    }
+
+        @Override
+        public void exception() {
+
+        }
+
+    };
+
 
     @Override
-    public void finish() {
-        super.finish();
-        if (mPlayqueue != null) mPlayqueue.stop();
-        if (VIdeoMediaCodec != null) VIdeoMediaCodec.release();
-        if (mDecodeThread != null) mDecodeThread.shutdown();
-        if (tcpServer != null) tcpServer.stopServer();
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mController != null) mController.stop();
+        ScreenRecordController.getInstance().stopServer();
     }
 
-    private void initialFIle() {
-        File file = new File(Environment.getExternalStorageDirectory(), "test.aac");
-        if (file.exists()) {
-            file.delete();
-        }
-        try {
-            file.createNewFile();
-            fos = new FileOutputStream(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
