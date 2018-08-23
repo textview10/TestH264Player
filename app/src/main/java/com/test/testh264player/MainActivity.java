@@ -1,12 +1,14 @@
 package com.test.testh264player;
 
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.test.video_play.ScreenRecordController;
 import com.test.video_play.control.VideoPlayController;
@@ -18,6 +20,8 @@ public class MainActivity extends AppCompatActivity {
     private SurfaceHolder mSurfaceHolder;
 
     private VideoPlayController mController;
+    private TextView tv_speednet;
+    private RelativeLayout rl_detail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +31,8 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
         mSurface = findViewById(R.id.surfaceview);
-
+        tv_speednet = findViewById(R.id.tv_main_speednet);
+        rl_detail = findViewById(R.id.rl_content_detail);
         mController = new VideoPlayController();
 
         ScreenRecordController.getInstance()
@@ -51,10 +56,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
+                Log.e(TAG, "surface destory");
                 mController.surfaceDestrory();
             }
         });
-
     }
 
     //客户端Tcp连接状态的回调...
@@ -63,11 +68,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void acceptH264TcpConnect() {
             Log.e(TAG, "accept a tcp connect...");
+            rl_detail.setVisibility(View.GONE);
         }
 
         @Override
         public void acceptH264TcpDisConnect(Exception e) {
             Log.e(TAG, "acceptTcpConnect exception = " + e.toString());
+            rl_detail.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -75,6 +82,11 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+        @Override
+        public void acceptH264TcpNetSpeed(String netSpeed) {
+            super.acceptH264TcpNetSpeed(netSpeed);
+            tv_speednet.setText(netSpeed);
+        }
     };
 
 

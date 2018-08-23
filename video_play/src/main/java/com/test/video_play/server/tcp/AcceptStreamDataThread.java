@@ -44,13 +44,14 @@ public class AcceptStreamDataThread extends Thread implements AnalyticDataUtils.
             this.InputStream = socket.getInputStream();
             this.outputStream = socket.getOutputStream();
         } catch (Exception e) {
-
+            Log.e(TAG,"get InputStream and OutputStream exception" + e.toString());
         }
         this.listener = listener;
         this.mTcpListener = tcpListener;
         mDecoderUtils = new DecodeUtils();
         mAnalyticDataUtils = new AnalyticDataUtils();
         mAnalyticDataUtils.setOnAnalyticDataListener(this);
+        startFlag = true;
         mDecoderUtils.setOnVideoListener(new DecodeUtils.OnVideoListener() {
             @Override
             public void onSpsPps(byte[] sps, byte[] pps) {
@@ -69,16 +70,19 @@ public class AcceptStreamDataThread extends Thread implements AnalyticDataUtils.
                     case Frame.KEY_FRAME:
                         frame.setType(Frame.KEY_FRAME);
                         frame.setBytes(video);
+                        Log.d("AcceptH264MsgThread", "key frame ...");
                         AcceptStreamDataThread.this.listener.acceptBuff(frame);
                         break;
                     case Frame.NORMAL_FRAME:
                         frame.setType(Frame.NORMAL_FRAME);
                         frame.setBytes(video);
+                        Log.d("AcceptH264MsgThread", "normal frame ...");
                         AcceptStreamDataThread.this.listener.acceptBuff(frame);
                         break;
                     case Frame.AUDIO_FRAME:
                         frame.setType(Frame.AUDIO_FRAME);
                         frame.setBytes(video);
+                        Log.d("AcceptH264MsgThread", "audio frame ...");
                         AcceptStreamDataThread.this.listener.acceptBuff(frame);
                         break;
                     default:
@@ -93,7 +97,8 @@ public class AcceptStreamDataThread extends Thread implements AnalyticDataUtils.
     public void sendStartMessage() {
         //告诉客户端,可以开始投屏了
         try {
-            outputStream.write("ok".getBytes());
+            outputStream.write("OK".getBytes());
+            Log.i(TAG, "send start message");
         } catch (IOException e) {
             if (mTcpListener != null) {
                 mTcpListener.disconnect(e);
@@ -118,7 +123,7 @@ public class AcceptStreamDataThread extends Thread implements AnalyticDataUtils.
         try {
             while (startFlag) {
                 //开始接收客户端发过来的数据
-                byte[] header = mAnalyticDataUtils.readByte(InputStream, 18);
+                byte[] header = mAnalyticDataUtils.readByte(InputStream, 17);
                 //数据如果为空，则休眠，防止cpu空转,  0.0 不可能会出现的,会一直阻塞在之前
                 if (header == null || header.length == 0) {
                     SystemClock.sleep(1);
@@ -157,6 +162,11 @@ public class AcceptStreamDataThread extends Thread implements AnalyticDataUtils.
     }
 
     public void shutdown() {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         startFlag = false;
         if (mAnalyticDataUtils != null) mAnalyticDataUtils.stop();
         this.interrupt();
@@ -164,7 +174,7 @@ public class AcceptStreamDataThread extends Thread implements AnalyticDataUtils.
 
     @Override
     public void netSpeed(String msg) {
-        if (mTcpListener != null ) mTcpListener.netSpeed(msg);
+        if (mTcpListener != null) mTcpListener.netSpeed(msg);
     }
 
     public interface OnTcpChangeListener {

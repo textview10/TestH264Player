@@ -75,13 +75,8 @@ public class DecodeThread extends Thread {
         }
     }
 
-    public void setOnFrameChangeListener(VideoPlay.OnFrameChangeListener listener) {
-//        videoPlay.setOnFrameChangeListener(listener);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void shutdown() {
-        Log.e(TAG, "DecodeThread shutdown");
+        Log.i(TAG, "DecodeThread shutdown");
         isPlaying = false;
         this.interrupt();
         if (audioPlay != null) audioPlay.release();

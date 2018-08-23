@@ -1,11 +1,13 @@
 package com.test.video_play.server.tcp;
 
 import android.util.Log;
+
 import com.test.video_play.ScreenImageApi;
 import com.test.video_play.ScreenRecordController;
 import com.test.video_play.entity.ReceiveHeader;
 import com.test.video_play.server.tcp.interf.OnAcceptBuffListener;
 import com.test.video_play.utils.AnalyticDataUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -45,30 +47,31 @@ public class TcpServer implements AcceptStreamDataThread.OnTcpChangeListener {
                     InetSocketAddress socketAddress = new InetSocketAddress(ScreenRecordController.port);
                     serverSocket.bind(socketAddress);
                     serverSocket.setSoTimeout(20000);
+                    Log.i(TAG, "ServerSocket start bind port " + ScreenRecordController.port);
                     while (isAccept) {
                         //服务端接收客户端的连接请求
-                        Socket socket = serverSocket.accept();
-                        InputStream inputStream = socket.getInputStream();
-                        byte[] temp = mAnalyticUtils.readByte(inputStream, 18);
-                        ReceiveHeader receiveHeader = mAnalyticUtils.analysisHeader(temp);
-                        if (receiveHeader.getMainCmd() == ScreenImageApi.RECORD.MAIN_CMD) {//投屏请求
-                            if (acceptStreamDataThread != null){
-                                acceptStreamDataThread.shutdown();
-                                acceptStreamDataThread = null;
+                        try {
+                            Socket socket = serverSocket.accept();
+                            InputStream inputStream = socket.getInputStream();
+                            byte[] temp = mAnalyticUtils.readByte(inputStream, 17);
+                            ReceiveHeader receiveHeader = mAnalyticUtils.analysisHeader(temp);
+                            if (receiveHeader.getMainCmd() == ScreenImageApi.RECORD.MAIN_CMD) {//投屏请求
+                                if (acceptStreamDataThread != null) {
+                                    acceptStreamDataThread.shutdown();
+                                    acceptStreamDataThread = null;
+                                }
+                                acceptStreamDataThread = new AcceptStreamDataThread(socket, mListener, TcpServer.this);
+                                acceptStreamDataThread.start();
+                            } else {
+                                Log.e(TAG, "accept other connect and close socket");
+                                socket.close();
                             }
-                            //开启接收H264和Aac线程
-                            if (receiveHeader.getStringBodylength() != 0) {
-                                mAnalyticUtils.analyticData(inputStream, receiveHeader);
-                            }
-                            acceptStreamDataThread = new AcceptStreamDataThread(socket, mListener, TcpServer.this);
-                            acceptStreamDataThread.start();
-                        } else {
-                            Log.e(TAG, "accept other connect and close socket");
-                            socket.close();
+                        } catch (Exception e) {
+                            Log.e(TAG, "connect has Exception = " + e.toString());
                         }
                     }
                 } catch (Exception e) {
-                    Log.e("lw", "run: 走停止");
+                    Log.e(TAG, "exception close." + e.toString());
                 } finally {
                     Log.e(TAG, "TcpServer: thread close");
                     try {
@@ -94,7 +97,7 @@ public class TcpServer implements AcceptStreamDataThread.OnTcpChangeListener {
             public void run() {
                 super.run();
                 try {
-                    if (acceptStreamDataThread != null){
+                    if (acceptStreamDataThread != null) {
                         acceptStreamDataThread.shutdown();
                         acceptStreamDataThread = null;
                     }
@@ -111,21 +114,38 @@ public class TcpServer implements AcceptStreamDataThread.OnTcpChangeListener {
     @Override
     public void connect() {
         if (ScreenRecordController.mServerStateChangeListener != null) {
-            ScreenRecordController.mServerStateChangeListener.acceptH264TcpConnect();
+            if (ScreenRecordController.mServerStateChangeListener != null) {
+                ScreenRecordController.mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        ScreenRecordController.mServerStateChangeListener.acceptH264TcpConnect();
+                    }
+                });
+            }
         }
     }
 
     @Override
-    public void disconnect(Exception e) {
+    public void disconnect(final Exception e) {
         if (ScreenRecordController.mServerStateChangeListener != null) {
-            ScreenRecordController.mServerStateChangeListener.acceptH264TcpDisConnect(e);
+            ScreenRecordController.mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    ScreenRecordController.mServerStateChangeListener.acceptH264TcpDisConnect(e);
+                }
+            });
         }
     }
 
     @Override
-    public void netSpeed(String netSpeed) {
+    public void netSpeed(final String netSpeed) {
         if (ScreenRecordController.mServerStateChangeListener != null) {
-            ScreenRecordController.mServerStateChangeListener.acceptH264TcpNetSpeed(netSpeed);
+            ScreenRecordController.mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    ScreenRecordController.mServerStateChangeListener.acceptH264TcpNetSpeed(netSpeed);
+                }
+            });
         }
     }
 

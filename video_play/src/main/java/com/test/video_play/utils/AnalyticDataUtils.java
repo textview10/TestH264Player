@@ -36,22 +36,23 @@ public class AnalyticDataUtils {
         //length：复制的长度
         byte[] buff = new byte[4];
         System.arraycopy(header, 1, buff, 0, 4);
-        final int mainCmd = ByteUtil.bytesToInt(buff);       //主指令  1`5
+        final int mainCmd = ByteUtil.bytesToInt(buff);       //主指令  1`4
         buff = new byte[4];
         System.arraycopy(header, 5, buff, 0, 4);
-        final int subCmd = ByteUtil.bytesToInt(buff);    //子指令  5`9
+        final int subCmd = ByteUtil.bytesToInt(buff);    //子指令  5`8
         buff = new byte[4];
         System.arraycopy(header, 9, buff, 0, 4);
-        int stringBodyLength = ByteUtil.bytesToInt(buff);//文本数据 9 ~ 13;
+        int stringBodyLength = ByteUtil.bytesToInt(buff);//文本数据 9 ~ 12;
         buff = new byte[4];
-        System.arraycopy(header, 013, buff, 0, 4);
-        int byteBodySize = ByteUtil.bytesToInt(buff);//byte数据 13^17
+        System.arraycopy(header, 13, buff, 0, 4);
+        int byteBodySize = ByteUtil.bytesToInt(buff);//byte数据 13^16
         return new ReceiveHeader(mainCmd, subCmd, header[0], stringBodyLength, byteBodySize);
     }
 
 
     /**
      * 解析数据
+     *
      * @param is
      * @param receiveHeader
      * @return
