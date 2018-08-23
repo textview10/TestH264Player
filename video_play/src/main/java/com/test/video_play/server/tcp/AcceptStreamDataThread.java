@@ -3,7 +3,7 @@ package com.test.video_play.server.tcp;
 import android.os.SystemClock;
 import android.util.Log;
 
-import com.test.video_play.ScreenImageApi;
+import com.test.video_play.ScreenRecordApi;
 import com.test.video_play.entity.Frame;
 import com.test.video_play.entity.ReceiveData;
 import com.test.video_play.entity.ReceiveHeader;
@@ -135,7 +135,7 @@ public class AcceptStreamDataThread extends Thread implements AnalyticDataUtils.
                     SystemClock.sleep(1);
                     continue;
                 }
-                if (receiveHeader.getEncodeVersion() != ScreenImageApi.encodeVersion1) {
+                if (receiveHeader.getEncodeVersion() != ScreenRecordApi.encodeVersion1) {
                     Log.e(TAG, "接收到的数据格式不对...");
                     continue;
                 }

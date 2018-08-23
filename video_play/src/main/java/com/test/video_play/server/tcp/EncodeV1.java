@@ -2,7 +2,7 @@ package com.test.video_play.server.tcp;
 
 import android.text.TextUtils;
 
-import com.test.video_play.ScreenImageApi;
+import com.test.video_play.ScreenRecordApi;
 import com.test.video_play.utils.ByteUtil;
 
 import java.nio.ByteBuffer;
@@ -48,7 +48,7 @@ public class EncodeV1 {
         }
         //创建内存缓冲区
         bb = ByteBuffer.allocate(18 + bodyLength + bodyByte);
-        bb.put(ScreenImageApi.encodeVersion1); //0-1编码版本
+        bb.put(ScreenRecordApi.encodeVersion1); //0-1编码版本
         bb.put(ByteUtil.int2Bytes(mainCmd));  //1-5  主指令
         bb.put(ByteUtil.int2Bytes(subCmd));   //5-9  子指令
         bb.put(ByteUtil.int2Bytes(bodyLength));  //9-13位,文本数据长度

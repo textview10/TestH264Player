@@ -4,7 +4,7 @@ package com.test.video_play;
  * Created by wt on 2018/6/11.
  * 设备常用配置
  */
-public class ScreenImageApi {
+public class ScreenRecordApi {
     public static final byte encodeVersion1 = 0x00;       //版本号1
 
     public class RECORD {   //录屏指令

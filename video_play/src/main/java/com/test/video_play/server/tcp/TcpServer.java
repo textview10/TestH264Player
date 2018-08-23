@@ -2,7 +2,7 @@ package com.test.video_play.server.tcp;
 
 import android.util.Log;
 
-import com.test.video_play.ScreenImageApi;
+import com.test.video_play.ScreenRecordApi;
 import com.test.video_play.ScreenRecordController;
 import com.test.video_play.entity.ReceiveHeader;
 import com.test.video_play.server.tcp.interf.OnAcceptBuffListener;
@@ -41,12 +41,10 @@ public class TcpServer implements AcceptStreamDataThread.OnTcpChangeListener {
             public void run() {
                 super.run();
                 try {
-                    // 创建一个ServerSocket对象，并设置监听端口
                     serverSocket = new ServerSocket();
                     serverSocket.setReuseAddress(true);
                     InetSocketAddress socketAddress = new InetSocketAddress(ScreenRecordController.port);
                     serverSocket.bind(socketAddress);
-                    serverSocket.setSoTimeout(20000);
                     Log.i(TAG, "ServerSocket start bind port " + ScreenRecordController.port);
                     while (isAccept) {
                         //服务端接收客户端的连接请求
@@ -55,7 +53,7 @@ public class TcpServer implements AcceptStreamDataThread.OnTcpChangeListener {
                             InputStream inputStream = socket.getInputStream();
                             byte[] temp = mAnalyticUtils.readByte(inputStream, 17);
                             ReceiveHeader receiveHeader = mAnalyticUtils.analysisHeader(temp);
-                            if (receiveHeader.getMainCmd() == ScreenImageApi.RECORD.MAIN_CMD) {//投屏请求
+                            if (receiveHeader.getMainCmd() == ScreenRecordApi.RECORD.MAIN_CMD) {//投屏请求
                                 if (acceptStreamDataThread != null) {
                                     acceptStreamDataThread.shutdown();
                                     acceptStreamDataThread = null;
